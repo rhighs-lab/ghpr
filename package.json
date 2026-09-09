@@ -1,0 +1,16 @@
+{
+  "name": "ghpr",
+  "version": "1.0.0",
+  "description": "List open pull requests authored by your GitHub team, grouped for review",
+  "bin": {
+    "ghpr": "bin/ghpr.js"
+  },
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true,
+  "dependencies": {
+    "ghpr": "link:"
+  }
+}
