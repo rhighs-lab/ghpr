@@ -27,6 +27,7 @@ ${c.bold('OPTIONS')}
       --no-bots             hide bot threads and comments (with --comments)
       --notes <n>           how many PR-level comments to show, 0 for none (default: 3)
       --ready               only PRs you could review now (no drafts, no yours, unapproved)
+      --requested           only PRs you (or your teams) were asked to review
       --mine                only PRs you authored
   -a, --author <login>      only PRs by this author (repeatable)
       --sort <key>          created | updated | size | age   (default: created)
@@ -46,6 +47,7 @@ ${c.bold('DEFAULTS')}
 ${c.bold('EXAMPLES')}
   ghpr                       ${c.dim('# every open team PR on the default base')}
   ghpr --ready               ${c.dim('# just the ones worth opening now')}
+  ghpr --requested           ${c.dim('# PRs asking you for review')}
   ghpr --base any --mine     ${c.dim('# your PRs, any target branch')}
   ghpr -t Kong/gateway       ${c.dim('# a different team')}
   ghpr --json | jq '.[0]'    ${c.dim('# pipe it somewhere')}
@@ -90,6 +92,7 @@ function parseArgs(argv) {
       case '--notes': opts.notes = Number(next(i, a)); i++; break
       case '--no-notes': opts.notes = 0; break
       case '--ready': opts.ready = true; break
+      case '--requested': opts.requested = true; break
       case '--mine': opts.mine = true; break
       case '--json': opts.json = true; break
       case '--no-summary': opts.noSummary = true; break
@@ -277,6 +280,17 @@ function main() {
   const all = gh.openPullRequests(repo, baseFilter, limit)
 
   let prs = all.filter(p => roster.has(p.author.login))
+
+  if (opts.requested) {
+    const mySlugs = new Set(gh.myTeams().map(t => t.slug))
+    prs = all.filter(
+      p => !p.isDraft && (p.reviewRequests || []).some(
+        r =>
+          (r.login || '').toLowerCase() === me.toLowerCase() ||
+          (r.slug && mySlugs.has(r.slug))
+      )
+    )
+  }
 
   const counts = {
     fetched: all.length,
