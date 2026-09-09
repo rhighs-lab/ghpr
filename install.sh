@@ -15,7 +15,7 @@ done
 
 node_major="$(node -p "process.versions.node.split('.')[0]")"
 if (( node_major < 18 )); then
-  printf 'ghpr needs Node.js 18 or newer (found %s).\n' "$(node --version)" >&2
+  printf 'Node.js 18 or newer required, found: %s\n' "$(node --version)" >&2
   exit 1
 fi
 
@@ -34,7 +34,4 @@ printf 'Installed ghpr at %s\n' "${command_path}"
 resolved_command="$(command -v ghpr || true)"
 if [[ -z "${resolved_command}" ]]; then
   printf 'Add %s to PATH, then open a new shell.\n' "${bin_dir}"
-elif [[ "${resolved_command}" != "${command_path}" ]]; then
-  printf 'Warning: ghpr resolves to %s, not %s. Remove the older install or reorder PATH.\n' \
-    "${resolved_command}" "${command_path}" >&2
 fi
