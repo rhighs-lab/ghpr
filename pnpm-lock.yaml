@@ -6,8 +6,4 @@ settings:
 
 importers:
 
-  .:
-    dependencies:
-      ghpr:
-        specifier: 'link:'
-        version: 'link:'
+  .: {}

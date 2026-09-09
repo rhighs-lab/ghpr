@@ -9,8 +9,5 @@
   "engines": {
     "node": ">=18"
   },
-  "private": true,
-  "dependencies": {
-    "ghpr": "link:"
-  }
+  "private": true
 }
