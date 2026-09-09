@@ -22,6 +22,8 @@ ${c.bold('OPTIONS')}
   -t, --team <org/slug>     team whose members to include
       --link <style>        full | short | off | auto   (default: auto)
       --no-link             same as --link off (the PR number stays clickable)
+      --filter <cols>       keep only these columns, e.g. --filter author,size
+                            pr | author | state | size | age | flags | title | link
       --comments            show review threads and replies instead of the table
       --resolved            include resolved threads (with --comments)
       --no-bots             hide bot threads and comments (with --comments)
@@ -52,6 +54,7 @@ ${c.bold('EXAMPLES')}
   ghpr -t Kong/gateway       ${c.dim('# a different team')}
   ghpr --json | jq '.[0]'    ${c.dim('# pipe it somewhere')}
   ghpr --ready --link full    ${c.dim('# force whole URLs, whatever the width')}
+  ghpr --filter author,size,link ${c.dim('# only the columns you name')}
 
 ${c.bold('TRACKING RESPONSES')}
   ghpr --comments            ${c.dim('# threads on your PRs, newest reply first')}
@@ -86,6 +89,7 @@ function parseArgs(argv) {
       case '-n': case '--limit': opts.limit = Number(next(i, a)); i++; break
       case '--link': opts.link = next(i, a); i++; break
       case '--no-link': opts.link = 'off'; break
+      case '--filter': opts.filter = next(i, a); i++; break
       case '--comments': case '--threads': opts.comments = true; break
       case '--resolved': opts.resolved = true; break
       case '--no-bots': opts.noBots = true; break
@@ -120,6 +124,21 @@ function parseArgs(argv) {
   const styles = ['full', 'short', 'off', 'auto']
   if (opts.link && !styles.includes(opts.link)) {
     throw new Error(`--link must be one of: ${styles.join(', ')}`)
+  }
+
+  const ALIAS = { number: 'pr', changes: 'size', diff: 'size' }
+  const COLUMNS = ['pr', 'author', 'state', 'size', 'age', 'flags', 'title', 'link']
+  if (opts.filter !== undefined) {
+    const names = opts.filter.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+    if (!names.length) throw new Error(`--filter needs at least one column: ${COLUMNS.join(', ')}`)
+    const unknown = names.filter(n => !COLUMNS.includes(ALIAS[n] || n))
+    if (unknown.length) {
+      throw new Error(
+        `--filter: unknown column${unknown.length > 1 ? 's' : ''}: ${unknown.join(', ')}\n` +
+          `Columns: ${COLUMNS.join(', ')} (aliases: number=pr, changes=size)`
+      )
+    }
+    opts.columns = new Set(names.map(n => ALIAS[n] || n))
   }
 
   return opts
@@ -358,7 +377,7 @@ function main() {
   })
 
   const termWidth = process.stdout.columns || Number(process.env.COLUMNS) || 120
-  const rendered = table(rows, { termWidth, linkStyle: opts.link || 'auto' })
+  const rendered = table(rows, { termWidth, linkStyle: opts.link || 'auto', columns: opts.columns })
   console.log(rendered.text)
 
   if (!opts.noSummary) {
