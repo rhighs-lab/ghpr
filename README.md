@@ -24,6 +24,7 @@ git -C ~/.local/share/ghpr pull --ff-only
 | `ghpr` | List open team PRs on the default base branch |
 | `ghpr --ready` | Show PRs you can review now |
 | `ghpr --mine` | Show your PRs |
+| `ghpr --requested ` | Show PRs you've been requested to review |
 | `ghpr --comments` | Show review threads on your PRs |
 | `ghpr --comments -a LOGIN` | Show threads on another author's PRs |
 | `ghpr --comments --no-bots` | Hide bot comments and threads |
