@@ -25,6 +25,7 @@ git -C ~/.local/share/ghpr pull --ff-only
 | `ghpr --ready` | Show PRs you can review now |
 | `ghpr --mine` | Show your PRs |
 | `ghpr --requested ` | Show PRs you've been requested to review |
+| `ghpr --reviewing` | Show open PRs you've already reviewed |
 | `ghpr --comments` | Show review threads on your PRs |
 | `ghpr --comments -a LOGIN` | Show threads on another author's PRs |
 | `ghpr --comments --no-bots` | Hide bot comments and threads |
@@ -44,7 +45,7 @@ git -C ~/.local/share/ghpr pull --ff-only
 | `ghpr --clear-cache` | Clear the cached team roster |
 | `ghpr --help` | Show every option |
 
-`--ready` excludes drafts, your own PRs, and approved PRs. In comment view, actionable threads appear first.
+`--ready` excludes drafts, your own PRs, and approved PRs. In comment view, actionable threads appear first. `--reviewing` uses the GitHub search index, so a brand-new review may take a minute to appear.
 
 ## Configuration
 

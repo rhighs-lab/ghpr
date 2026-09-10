@@ -30,6 +30,7 @@ ${c.bold('OPTIONS')}
       --notes <n>           how many PR-level comments to show, 0 for none (default: 3)
       --ready               only PRs you could review now (no drafts, no yours, unapproved)
       --requested           only PRs you (or your teams) were asked to review
+      --reviewing           only open PRs you have already reviewed
       --mine                only PRs you authored
   -a, --author <login>      only PRs by this author (repeatable)
       --sort <key>          created | updated | size | age   (default: created)
@@ -97,6 +98,7 @@ function parseArgs(argv) {
       case '--no-notes': opts.notes = 0; break
       case '--ready': opts.ready = true; break
       case '--requested': opts.requested = true; break
+      case '--reviewing': opts.reviewing = true; break
       case '--mine': opts.mine = true; break
       case '--json': opts.json = true; break
       case '--no-summary': opts.noSummary = true; break
@@ -183,7 +185,11 @@ function renderComments(prs, { repo, me, org, slug, members, opts }) {
   const termWidth = process.stdout.columns || Number(process.env.COLUMNS) || 120
   const snippetWidth = Math.max(40, termWidth - 18)
 
-  const scope = opts.authors.length ? opts.authors.join(', ') : me
+  const scope = opts.authors.length
+    ? opts.authors.join(', ')
+    : opts.reviewing
+      ? `${me} (reviewing)`
+      : me
 
   if (!opts.json) {
     console.log(
@@ -322,11 +328,17 @@ function main() {
     p => !p.isDraft && p.author.login !== me && p.reviewDecision !== 'APPROVED'
   ).length
 
+  if (opts.reviewing) {
+    const reviewed = gh.reviewedNumbers(repo, me)
+    prs = (opts.requested ? prs : all).filter(p => reviewed.has(p.number) && p.author.login !== me)
+  }
   if (opts.ready) {
     prs = prs.filter(p => !p.isDraft && p.author.login !== me && p.reviewDecision !== 'APPROVED')
   }
   // Threads are about tracking replies, so with no author named the subject is you.
-  if (opts.comments && !opts.mine && !opts.authors.length && !opts.ready) opts.mine = true
+  if (opts.comments && !opts.mine && !opts.authors.length && !opts.ready && !opts.reviewing) {
+    opts.mine = true
+  }
 
   if (opts.mine) prs = prs.filter(p => p.author.login === me)
   if (opts.authors.length) {
